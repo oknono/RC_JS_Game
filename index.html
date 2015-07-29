@@ -12,6 +12,7 @@ ctx.font = '30px Arial';
 var HEIGHT = 500;
 var WIDTH = 500;
 var timeWhenGameStarted = Date.now();
+var framecount = 0;
 
 //player 
 var player = {
@@ -28,7 +29,7 @@ var player = {
 
 //enemy
 
-Enemy = function(id, x , y, spdX, spdY, h, w){
+Enemy = function(id, x , y, spdX, spdY, h, w , color){
     //local variable
     var enemy = {
     x:x,
@@ -39,7 +40,7 @@ Enemy = function(id, x , y, spdX, spdY, h, w){
     name:'E',
     height:h,
     width:w,
-    color:'red'
+    color:color,
    };
 
 // link to permanent variable
@@ -48,13 +49,25 @@ enemyList[id] = enemy;
 
 var enemyList = {};
 
-Enemy('E1', 150, 350, 10, 10,30,30);
-Enemy('E2', 10, 250, -5, -8,20,20);
-Enemy('E3', 30, 50, -7, 6, 10, 40);
-
 document.onmousemove = function(mouse){
-    var mouseX = mouse.clientX;
-    var mouseY = mouse.clientY;
+    var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+    var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+
+    if (mouseX < player.width/2){
+        mouseX = player.width/2;
+    }
+
+    if (mouseX > WIDTH - player.width/2){
+         mouseX = WIDTH - player.width/2;
+    }
+
+    if (mouseY < player.height/2){
+         mouseY = player.height/2;
+    }
+
+    if (mouseY > HEIGHT - player.height/2){
+         mouseY = HEIGHT- player.height/2;
+    }
 
     player.x = mouseX;
     player.y = mouseY;
@@ -114,19 +127,25 @@ drawEntity = function(entity){
 
 update = function (){
 	ctx.clearRect(0,0,WIDTH,HEIGHT);
+    framecount++;
+
+    if(framecount % 100 == 0){
+        randomGenerateEnemy();
+    }
+
     for(var key in enemyList){
         updateEntity(enemyList[key]);
 
         var isColliding = testCollisionEntities(player, enemyList[key])
         if (isColliding){
             player.hp -= 1;
-            if (player.hp <= 0){
+        }
+
+        if (player.hp <= 0){
                 var timeSurvived = Date.now() - timeWhenGameStarted;
                 console.log("You lost! You survived for " + timeSurvived + "ms");
-                timeWhenGameStarted = Date.now();
-                player.hp = 10;
+                startNewGame();
             }
-        }
 	}
 	
     drawEntity(player);
@@ -134,6 +153,32 @@ update = function (){
 	
 }
 
+startNewGame = function(){
+    player.hp = 10;
+    timeWhenGameStarted = Date.now();
+    framecount = 0;
+    enemyList = {};
+    randomGenerateEnemy();
+    randomGenerateEnemy();
+    randomGenerateEnemy();
+}
+
+
+randomGenerateEnemy = function (){
+    var x = Math.random() * WIDTH;
+    var y = Math.random() * HEIGHT;
+    var width = 10 + Math.random() * 30;
+    var height =  10 + Math.random() * 30;
+    var id = Math.random();
+    var spdX = 5 + Math.random() * 5;
+    var spdY = 5 + Math.random() * 5;
+    var color = 'red';
+
+    Enemy(id, x, y, spdX, spdY, height, width,  color);
+}
+
+
+startNewGame();
 setInterval(update, 40);
 
 
