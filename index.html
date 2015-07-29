@@ -20,12 +20,15 @@ var player = {
     y:350,
     spdY:10,
     name:'p',
-    hp:10
+    hp:10,
+    height:20,
+    width:20,
+    color:'green',
 };
 
 //enemy
 
-Enemy = function(id, x , y, spdX, spdY){
+Enemy = function(id, x , y, spdX, spdY, h, w){
     //local variable
     var enemy = {
     x:x,
@@ -33,17 +36,21 @@ Enemy = function(id, x , y, spdX, spdY){
     y:y,
     spdY:spdY,
     id:id,
-    name:'E'
+    name:'E',
+    height:h,
+    width:w,
+    color:'red'
    };
+
 // link to permanent variable
 enemyList[id] = enemy;
 }
 
 var enemyList = {};
 
-Enemy('E1', 150, 350, 10, 10);
-Enemy('E2', 10, 250, -5, -8);
-Enemy('E3', 30, 50, -7, 6);
+Enemy('E1', 150, 350, 10, 10,30,30);
+Enemy('E2', 10, 250, -5, -8,20,20);
+Enemy('E3', 30, 50, -7, 6, 10, 40);
 
 document.onmousemove = function(mouse){
     var mouseX = mouse.clientX;
@@ -63,14 +70,14 @@ testCollisionEntities = function (e1, e2){
     var e1 = {
         x:e1.x - 10,
         y:e1.y - 10, 
-        width:20,
-        height:20
+        width: e1.width,
+        height:e1.height,
     }
     var e2 = {
         x:e2.x -15,
         y:e2.y -15, 
-        width:30,
-        height:30
+        width: e2.width,
+        height: e2.height,
     }
     return testCollisionRectangles(e1,e2);
 } 
@@ -84,7 +91,7 @@ testCollisionRectangles = function (r1, r2){
 
 updateEntity = function(entity){
     updateEntityPosition(entity);
-    drawEnemy(entity);
+    drawEntity(entity);
 }
 
 updateEntityPosition = function(entity){
@@ -98,19 +105,12 @@ updateEntityPosition = function(entity){
     }
 }
 
-drawPlayer = function(entity){
+drawEntity = function(entity){
     ctx.save();
-    ctx.fillStyle = 'green';
-    ctx.fillRect(entity.x - 10, entity.y-10, 20, 20);
+    ctx.fillStyle = entity.color;
+    ctx.fillRect(entity.x - entity.width/2, entity.y - entity.height/2, entity.width, entity.height);
     ctx.restore();
     }
-
-drawEnemy = function(entity){
-    ctx.save();
-    ctx.fillStyle = 'red';
-    ctx.fillRect(entity.x - 15, entity.y - 15, 30, 30);;
-    ctx.restore();
-}
 
 update = function (){
 	ctx.clearRect(0,0,WIDTH,HEIGHT);
@@ -129,7 +129,7 @@ update = function (){
         }
 	}
 	
-    drawPlayer(player);
+    drawEntity(player);
     ctx.fillText(player.hp + "HP", 0, 30);
 	
 }
