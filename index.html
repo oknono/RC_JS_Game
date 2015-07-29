@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>HTML 5 Game</title>
+</head>
+<body>
+<canvas id ="ctx" width="500" height="500" style="border:1px solid #000000"> </canvas>
+<script type="text/javascript">
+var ctx = document.getElementById("ctx").getContext("2d");
+ctx.font = '30px Arial';
+
+var HEIGHT = 500;
+var WIDTH = 500;
+var timeWhenGameStarted = Date.now();
+
+//player 
+var player = {
+    x:100,
+    spdX:25,
+    y:350,
+    spdY:10,
+    name:'p',
+    hp:10
+};
+
+//enemy
+
+Enemy = function(id, x , y, spdX, spdY){
+    //local variable
+    var enemy = {
+    x:x,
+    spdX:spdX,
+    y:y,
+    spdY:spdY,
+    id:id,
+    name:'E'
+   };
+// link to permanent variable
+enemyList[id] = enemy;
+}
+
+var enemyList = {};
+
+Enemy('E1', 150, 350, 10, 10);
+Enemy('E2', 10, 250, -5, -8);
+Enemy('E3', 30, 50, -7, 6);
+
+document.onmousemove = function(mouse){
+    var mouseX = mouse.clientX;
+    var mouseY = mouse.clientY;
+
+    player.x = mouseX;
+    player.y = mouseY;
+}
+
+getDistanceBetweenEntities = function (e1, e2){
+    var dx = e1.x - e2.x;
+    var dy = e1.x - e2.x;
+    return Math.sqrt(dx*dx + dy*dy);
+}
+
+testCollisionEntities = function (e1, e2){
+    var e1 = {
+        x:e1.x - 10,
+        y:e1.y - 10, 
+        width:20,
+        height:20
+    }
+    var e2 = {
+        x:e2.x -15,
+        y:e2.y -15, 
+        width:30,
+        height:30
+    }
+    return testCollisionRectangles(e1,e2);
+} 
+
+testCollisionRectangles = function (r1, r2){
+    return r1.x <= r2.x + r2.width
+        && r2.x <= r1.x + r1.width
+        && r1.y <= r2.y + r2.height
+        && r2.y <= r1.y + r1.height;
+}
+
+updateEntity = function(entity){
+    updateEntityPosition(entity);
+    drawEnemy(entity);
+}
+
+updateEntityPosition = function(entity){
+    entity.x += entity.spdX;
+    entity.y += entity.spdY;
+    if (entity.x < 0 || entity.x > WIDTH){
+        entity.spdX *= -1;
+    }
+    if (entity.y < 0 || entity.y > HEIGHT){
+        entity.spdY *= -1;
+    }
+}
+
+drawPlayer = function(entity){
+    ctx.save();
+    ctx.fillStyle = 'green';
+    ctx.fillRect(entity.x - 10, entity.y-10, 20, 20);
+    ctx.restore();
+    }
+
+drawEnemy = function(entity){
+    ctx.save();
+    ctx.fillStyle = 'red';
+    ctx.fillRect(entity.x - 15, entity.y - 15, 30, 30);;
+    ctx.restore();
+}
+
+update = function (){
+	ctx.clearRect(0,0,WIDTH,HEIGHT);
+    for(var key in enemyList){
+        updateEntity(enemyList[key]);
+
+        var isColliding = testCollisionEntities(player, enemyList[key])
+        if (isColliding){
+            player.hp -= 1;
+            if (player.hp <= 0){
+                var timeSurvived = Date.now() - timeWhenGameStarted;
+                console.log("You lost! You survived for " + timeSurvived + "ms");
+                timeWhenGameStarted = Date.now();
+                player.hp = 10;
+            }
+        }
+	}
+	
+    drawPlayer(player);
+    ctx.fillText(player.hp + "HP", 0, 30);
+	
+}
+
+setInterval(update, 40);
+
+
+</script>
+</body>
+</html>
