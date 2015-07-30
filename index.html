@@ -27,6 +27,11 @@ var player = {
     width:20,
     color:'green',
     attackSpeed:1,
+    attackCounter:1,
+    pressDown: false,
+    pressUp: false,
+    pressLeft: false,
+    pressRight: false,
 };
 
 //enemy
@@ -94,7 +99,7 @@ var upgradeList = {};
 var bulletList = {};
 
 document.onmousemove = function(mouse){
-    var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+    /*var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
     var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
 
     if (mouseX < player.width/2){
@@ -114,7 +119,49 @@ document.onmousemove = function(mouse){
     }
 
     player.x = mouseX;
-    player.y = mouseY;
+    player.y = mouseY;*/
+}
+
+document.onclick = function(mouse){
+    if(player.attackCounter > 25){  // Every 1 second
+        randomGenerateBullet();
+        player.attackCounter = 0;
+    }
+}
+
+document.onkeydown = function(event){
+    //use awsd to move around
+    if (event.keyCode == 68)
+        player.pressRight = true;
+    else if (event.keyCode == 83)
+        player.pressDown = true;
+    else if (event.keyCode == 65)
+        player.pressLeft = true;
+    else if (event.keyCode == 87)
+        player.pressUp = true;
+}
+
+document.onkeyup = function(event){
+    //use awsd to move around
+    if (event.keyCode == 68)
+        player.pressRight = false;
+    else if (event.keyCode == 83)
+        player.pressDown = false;
+    else if (event.keyCode == 65)
+        player.pressLeft = false;
+    else if (event.keyCode == 87)
+        player.pressUp = false;
+}
+
+updatePlayerPosition = function(){
+    if(player.pressRight && player.x < WIDTH - player.width/2)
+        player.x += 10;
+    if(player.pressLeft && player.x > 0 + player.width/2)
+        player.x -= 10;
+    if(player.pressUp && player.y > 0 + player.height/2)
+        player.y -= 10;
+    if(player.pressDown && player.y < HEIGHT - player.height/2)
+        player.y += 10;
 }
 
 getDistanceBetweenEntities = function (e1, e2){
@@ -181,10 +228,8 @@ update = function (){
     if(framecount % 75 == 0){  // Every 3 seconds 
         randomGenerateUpgrade();
     }
-
-    if(framecount % Math.round(25/player.attackSpeed) == 0){  // Every 1 second
-        randomGenerateBullet();
-    }
+    
+    player.attackCounter += player.attackSpeed;
 
     for(var key in bulletList){
         updateEntity(bulletList[key]);
@@ -217,8 +262,8 @@ update = function (){
             if (upgradeList[key].category === 'score'){
                 score += 1000;
             }
-            else {
-                player.attackSpeed = 5;
+            if (upgradeList[key].category === 'attack'){
+                player.attackSpeed += 3;
             }
 
             delete upgradeList[key]
@@ -239,7 +284,7 @@ update = function (){
                 startNewGame();
             }
 	}
-	
+	updatePlayerPosition();
     drawEntity(player);
     ctx.fillText("HP: " + player.hp, 0, 30);
     ctx.fillText("score: " + score , 200, 30);
