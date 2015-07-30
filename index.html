@@ -32,6 +32,7 @@ var player = {
     pressUp: false,
     pressLeft: false,
     pressRight: false,
+    aimAngle:0,
 };
 
 //enemy
@@ -48,6 +49,7 @@ Enemy = function(id, x , y, spdX, spdY, h, w , color){
     height:h,
     width:w,
     color:color,
+    aimAngle:0,
    };
 
 // link to permanent variable
@@ -99,34 +101,35 @@ var upgradeList = {};
 var bulletList = {};
 
 document.onmousemove = function(mouse){
-    /*var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+    var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
     var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
 
-    if (mouseX < player.width/2){
-        mouseX = player.width/2;
-    }
+    mouseX -= player.x;
+    mouseY -= player.y;
 
-    if (mouseX > WIDTH - player.width/2){
-         mouseX = WIDTH - player.width/2;
-    }
-
-    if (mouseY < player.height/2){
-         mouseY = player.height/2;
-    }
-
-    if (mouseY > HEIGHT - player.height/2){
-         mouseY = HEIGHT- player.height/2;
-    }
-
-    player.x = mouseX;
-    player.y = mouseY;*/
+    player.aimAngle = Math.atan2(mouseY, mouseX) / Math.PI * 180;
 }
 
 document.onclick = function(mouse){
     if(player.attackCounter > 25){  // Every 1 second
-        randomGenerateBullet();
+        randomGenerateBullet(player);
         player.attackCounter = 0;
     }
+}
+
+document.oncontextmenu = function(mouse){  // on rightclick
+    if(player.attackCounter > 50){  // Every 1 second
+        var angle = 0;
+        for(var angle=0; angle < 360; angle++){
+             randomGenerateBullet(player, angle); 
+        }
+        //randomGenerateBullet(player, player.aimAngle - 5);
+        //randomGenerateBullet(player, player.aimAngle);
+        //randomGenerateBullet(player, player.aimAngle + 5);
+        
+        player.attackCounter = 0;
+    }
+    mouse.preventDefault();
 }
 
 document.onkeydown = function(event){
@@ -201,7 +204,7 @@ updateEntity = function(entity){
 updateEntityPosition = function(entity){
     entity.x += entity.spdX;
     entity.y += entity.spdY;
-    if (entity.x < 0 || entity.x > WIDTH){
+    if (entity.x < 0  || entity.x > WIDTH){
         entity.spdX *= -1;
     }
     if (entity.y < 0 || entity.y > HEIGHT){
@@ -340,13 +343,16 @@ randomGenerateUpgrade = function (){
    Upgrade(id, x, y, spdX, spdY, height, width, color, category);
 }
 
- randomGenerateBullet = function (){
-    var x = player.x;
-    var y = player.y;
+ randomGenerateBullet = function (actor, overwriteAngle){
+    var x = actor.x;
+    var y = actor.y;
     var width = 10;
     var height = 10; 
     var id = Math.random();
-    var angle = Math.random() * 360;
+    var angle = actor.aimAngle;
+    if (overwriteAngle != undefined){
+        angle = overwriteAngle;
+    }
     var spdX = Math.cos(angle/180*Math.PI)*5;
     var spdY = Math.sin(angle/180*Math.PI)*5;
     var color = 'black';
