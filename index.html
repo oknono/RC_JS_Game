@@ -26,6 +26,7 @@ var player = {
     height:20,
     width:20,
     color:'green',
+    attackSpeed:1,
 };
 
 //enemy
@@ -48,7 +49,7 @@ Enemy = function(id, x , y, spdX, spdY, h, w , color){
 enemyList[id] = enemy;
 }
 
-Upgrade = function(id, x , y, spdX, spdY, h, w , color){
+Upgrade = function(id, x , y, spdX, spdY, h, w , color, category){
     //local variable
     var upgrade = {
     x:x,
@@ -60,6 +61,7 @@ Upgrade = function(id, x , y, spdX, spdY, h, w , color){
     height:h,
     width:w,
     color:color,
+    category:category,
    };
 
 // link to permanent variable
@@ -67,7 +69,7 @@ upgradeList[id] = upgrade;
 
 }
 
-Bullet = function(id, x , y, angle, spdX, spdY, h, w , color){
+Bullet = function(id, x , y, angle, spdX, spdY, h, w, color, timer){
     //local variable
     var bullet = {
     x:x,
@@ -80,6 +82,7 @@ Bullet = function(id, x , y, angle, spdX, spdY, h, w , color){
     height:h,
     width:w,
     color:color,
+    timer:timer,
    };
 
 // link to permanent variable
@@ -179,16 +182,45 @@ update = function (){
         randomGenerateUpgrade();
     }
 
-    if(framecount % 25 == 0){  // Every 1 second
+    if(framecount % Math.round(25/player.attackSpeed) == 0){  // Every 1 second
         randomGenerateBullet();
     }
+
+    for(var key in bulletList){
+        updateEntity(bulletList[key]);
+        
+        var toRemove = false;
+        bulletList[key].timer++;
+        if (bulletList[key].timer > 100){
+            toRemove = true;
+        }
+
+        for(var key2 in enemyList){
+            var isColliding = testCollisionEntities(bulletList[key], enemyList[key2]);
+                if (isColliding){
+                    toRemove = true;
+                    delete enemyList[key2];
+                    //after deleting bullet stop the loop
+                    break;
+               }
+           }
+        if (toRemove){
+            delete bulletList[key];
+        }
+      }
 
     for(var key in upgradeList){
         updateEntity(upgradeList[key]);
 
         var isColliding = testCollisionEntities(player, upgradeList[key])
         if (isColliding){
-            score += 1000;
+            if (upgradeList[key].category === 'score'){
+                score += 1000;
+            }
+            else {
+                player.attackSpeed = 5;
+            }
+
             delete upgradeList[key]
         }
     }
@@ -207,10 +239,6 @@ update = function (){
                 startNewGame();
             }
 	}
-
-     for(var key in bulletList){
-        updateEntity(bulletList[key]);
-        }
 	
     drawEntity(player);
     ctx.fillText("HP: " + player.hp, 0, 30);
@@ -252,9 +280,19 @@ randomGenerateUpgrade = function (){
     var id = Math.random();
     var spdX = 0;
     var spdY = 0;
-    var color = 'orange';
 
-   Upgrade(id, x, y, spdX, spdY, height, width, color);
+    if (Math.random() < 0.5){
+        var category = 'score';
+        var color = 'orange';
+    }
+
+    else{
+        var category = 'attack';
+        var color = 'blue';
+    }
+    
+
+   Upgrade(id, x, y, spdX, spdY, height, width, color, category);
 }
 
  randomGenerateBullet = function (){
@@ -267,8 +305,9 @@ randomGenerateUpgrade = function (){
     var spdX = Math.cos(angle/180*Math.PI)*5;
     var spdY = Math.sin(angle/180*Math.PI)*5;
     var color = 'black';
+    var timer = 0;
 
-   Bullet(id, x, y, angle, spdX, spdY, height, width, color);
+   Bullet(id, x, y, angle, spdX, spdY, height, width, color, timer);
 }
 
 startNewGame();
