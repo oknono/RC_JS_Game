@@ -13,6 +13,7 @@ var HEIGHT = 500;
 var WIDTH = 500;
 var timeWhenGameStarted = Date.now();
 var framecount = 0;
+var score = 0;
 
 //player 
 var player = {
@@ -47,7 +48,47 @@ Enemy = function(id, x , y, spdX, spdY, h, w , color){
 enemyList[id] = enemy;
 }
 
+Upgrade = function(id, x , y, spdX, spdY, h, w , color){
+    //local variable
+    var upgrade = {
+    x:x,
+    spdX:spdX,
+    y:y,
+    spdY:spdY,
+    id:id,
+    name:'U',
+    height:h,
+    width:w,
+    color:color,
+   };
+
+// link to permanent variable
+upgradeList[id] = upgrade;
+
+}
+
+Bullet = function(id, x , y, angle, spdX, spdY, h, w , color){
+    //local variable
+    var bullet = {
+    x:x,
+    spdX:spdX,
+    y:y,
+    spdY:spdY,
+    angle:angle,
+    id:id,
+    name:'U',
+    height:h,
+    width:w,
+    color:color,
+   };
+
+// link to permanent variable
+bulletList[id] = bullet;
+}
+
 var enemyList = {};
+var upgradeList = {};
+var bulletList = {};
 
 document.onmousemove = function(mouse){
     var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
@@ -128,9 +169,28 @@ drawEntity = function(entity){
 update = function (){
 	ctx.clearRect(0,0,WIDTH,HEIGHT);
     framecount++;
+    score++;
 
-    if(framecount % 100 == 0){
+    if(framecount % 100 == 0){ // Every 4 seconds
         randomGenerateEnemy();
+    }
+
+    if(framecount % 75 == 0){  // Every 3 seconds 
+        randomGenerateUpgrade();
+    }
+
+    if(framecount % 25 == 0){  // Every 1 second
+        randomGenerateBullet();
+    }
+
+    for(var key in upgradeList){
+        updateEntity(upgradeList[key]);
+
+        var isColliding = testCollisionEntities(player, upgradeList[key])
+        if (isColliding){
+            score += 1000;
+            delete upgradeList[key]
+        }
     }
 
     for(var key in enemyList){
@@ -147,17 +207,24 @@ update = function (){
                 startNewGame();
             }
 	}
+
+     for(var key in bulletList){
+        updateEntity(bulletList[key]);
+        }
 	
     drawEntity(player);
-    ctx.fillText(player.hp + "HP", 0, 30);
-	
+    ctx.fillText("HP: " + player.hp, 0, 30);
+    ctx.fillText("score: " + score , 200, 30);
 }
 
 startNewGame = function(){
     player.hp = 10;
     timeWhenGameStarted = Date.now();
     framecount = 0;
+    score = 0;
     enemyList = {};
+    upgradeList = {};
+    bulletList = {};
     randomGenerateEnemy();
     randomGenerateEnemy();
     randomGenerateEnemy();
@@ -177,6 +244,32 @@ randomGenerateEnemy = function (){
     Enemy(id, x, y, spdX, spdY, height, width,  color);
 }
 
+randomGenerateUpgrade = function (){
+    var x = Math.random() * WIDTH;
+    var y = Math.random() * HEIGHT;
+    var width = 10;
+    var height = 10; 
+    var id = Math.random();
+    var spdX = 0;
+    var spdY = 0;
+    var color = 'orange';
+
+   Upgrade(id, x, y, spdX, spdY, height, width, color);
+}
+
+ randomGenerateBullet = function (){
+    var x = player.x;
+    var y = player.y;
+    var width = 10;
+    var height = 10; 
+    var id = Math.random();
+    var angle = Math.random() * 360;
+    var spdX = Math.cos(angle/180*Math.PI)*5;
+    var spdY = Math.sin(angle/180*Math.PI)*5;
+    var color = 'black';
+
+   Bullet(id, x, y, angle, spdX, spdY, height, width, color);
+}
 
 startNewGame();
 setInterval(update, 40);
