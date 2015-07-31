@@ -14,32 +14,36 @@ var WIDTH = 500;
 var timeWhenGameStarted = Date.now();
 var framecount = 0;
 var score = 0;
+var player;
 
-//player 
-var player = {
-    x:100,
-    spdX:25,
-    y:350,
-    spdY:10,
-    name:'p',
-    hp:10,
-    height:20,
-    width:20,
-    color:'green',
-    attackSpeed:1,
-    attackCounter:1,
-    pressDown: false,
-    pressUp: false,
-    pressLeft: false,
-    pressRight: false,
-    aimAngle:0,
-};
-
+//player
+createPlayer = function(){ 
+    player = {
+        type:'player',
+        x:100,
+        spdX:25,
+        y:350,
+        spdY:10,
+        name:'p',
+        hp:10,
+        height:20,
+        width:20,
+        color:'green',
+        attackSpeed:1,
+        attackCounter:1,
+        pressDown: false,
+        pressUp: false,
+        pressLeft: false,
+        pressRight: false,
+        aimAngle:0,
+    }
+}
 //enemy
 
 Enemy = function(id, x , y, spdX, spdY, h, w , color){
     //local variable
     var enemy = {
+    type:'enemy',    
     x:x,
     spdX:spdX,
     y:y,
@@ -50,6 +54,8 @@ Enemy = function(id, x , y, spdX, spdY, h, w , color){
     width:w,
     color:color,
     aimAngle:0,
+    attackSpeed:1,
+    attackCounter:1,
    };
 
 // link to permanent variable
@@ -59,6 +65,7 @@ enemyList[id] = enemy;
 Upgrade = function(id, x , y, spdX, spdY, h, w , color, category){
     //local variable
     var upgrade = {
+    type:'upgrade',    
     x:x,
     spdX:spdX,
     y:y,
@@ -79,6 +86,7 @@ upgradeList[id] = upgrade;
 Bullet = function(id, x , y, angle, spdX, spdY, h, w, color, timer){
     //local variable
     var bullet = {
+    type: 'bullet',    
     x:x,
     spdX:spdX,
     y:y,
@@ -111,25 +119,32 @@ document.onmousemove = function(mouse){
 }
 
 document.onclick = function(mouse){
-    if(player.attackCounter > 25){  // Every 1 second
-        randomGenerateBullet(player);
-        player.attackCounter = 0;
-    }
+    performAttack(player);
 }
 
 document.oncontextmenu = function(mouse){  // on rightclick
-    if(player.attackCounter > 50){  // Every 1 second
-        var angle = 0;
-        for(var angle=0; angle < 360; angle++){
-             randomGenerateBullet(player, angle); 
-        }
-        //randomGenerateBullet(player, player.aimAngle - 5);
-        //randomGenerateBullet(player, player.aimAngle);
-        //randomGenerateBullet(player, player.aimAngle + 5);
-        
-        player.attackCounter = 0;
-    }
+    performSpecialAttack(player);   
     mouse.preventDefault();
+}
+
+performAttack = function(actor){
+    if(actor.attackCounter > 25){  // Every 1 second
+        actor.attackCounter = 0;
+        generateBullet(actor);
+    }
+}
+
+performSpecialAttack = function(actor){
+    if(actor.attackCounter > 50){  // Every 1 second
+        /*var angle = 0;
+        for(var angle=0; angle < 360; angle++){
+             generateBullet(player, angle); 
+        }*/
+        actor.attackCounter = 0;
+        generateBullet(actor, actor.aimAngle - 5);
+        generateBullet(actor, actor.aimAngle);
+        generateBullet(actor, actor.aimAngle + 5);        
+    }
 }
 
 document.onkeydown = function(event){
@@ -154,17 +169,6 @@ document.onkeyup = function(event){
         player.pressLeft = false;
     else if (event.keyCode == 87)
         player.pressUp = false;
-}
-
-updatePlayerPosition = function(){
-    if(player.pressRight && player.x < WIDTH - player.width/2)
-        player.x += 10;
-    if(player.pressLeft && player.x > 0 + player.width/2)
-        player.x -= 10;
-    if(player.pressUp && player.y > 0 + player.height/2)
-        player.y -= 10;
-    if(player.pressDown && player.y < HEIGHT - player.height/2)
-        player.y += 10;
 }
 
 getDistanceBetweenEntities = function (e1, e2){
@@ -201,15 +205,31 @@ updateEntity = function(entity){
     drawEntity(entity);
 }
 
+
 updateEntityPosition = function(entity){
-    entity.x += entity.spdX;
-    entity.y += entity.spdY;
-    if (entity.x < 0  || entity.x > WIDTH){
-        entity.spdX *= -1;
-    }
-    if (entity.y < 0 || entity.y > HEIGHT){
-        entity.spdY *= -1;
-    }
+    if (entity.type === 'player'){
+        if(entity.pressRight && player.x < WIDTH - entity.width/2)
+            entity.x += 10;
+        if(entity.pressLeft && entity.x > 0 + entity.width/2)
+            entity.x -= 10;
+        if(entity.pressUp && entity.y > 0 + entity.height/2)
+            entity.y -= 10;
+        if(entity.pressDown && entity.y < HEIGHT - entity.height/2)
+            entity.y += 10;
+        }
+    else {
+        entity.x += entity.spdX;
+        entity.y += entity.spdY;
+        if  (entity.type === 'bullet'){
+            if (entity.x < 0  || entity.x > WIDTH || entity.y < 0 || entity.y > HEIGHT)
+                delete entity;}
+        else {
+            if (entity.x < 0  || entity.x > WIDTH)
+                entity.spdX *= -1;
+            if (entity.y < 0 || entity.y > HEIGHT)
+                entity.spdY *= -1;
+              }    
+        }
 }
 
 drawEntity = function(entity){
@@ -287,8 +307,7 @@ update = function (){
                 startNewGame();
             }
 	}
-	updatePlayerPosition();
-    drawEntity(player);
+	updateEntity(player);
     ctx.fillText("HP: " + player.hp, 0, 30);
     ctx.fillText("score: " + score , 200, 30);
 }
@@ -343,7 +362,7 @@ randomGenerateUpgrade = function (){
    Upgrade(id, x, y, spdX, spdY, height, width, color, category);
 }
 
- randomGenerateBullet = function (actor, overwriteAngle){
+ generateBullet = function (actor, overwriteAngle){
     var x = actor.x;
     var y = actor.y;
     var width = 10;
@@ -361,6 +380,7 @@ randomGenerateUpgrade = function (){
    Bullet(id, x, y, angle, spdX, spdY, height, width, color, timer);
 }
 
+createPlayer();
 startNewGame();
 setInterval(update, 40);
 
