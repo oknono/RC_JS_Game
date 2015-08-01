@@ -7,7 +7,6 @@
 <canvas id ="ctx" width="500" height="500" style="border:1px solid #000000"> </canvas>
 <script type="text/javascript">
 
-
 var ctx = document.getElementById("ctx").getContext("2d");
 ctx.font = '30px Arial';
 
@@ -55,7 +54,8 @@ Entity = function(type, id, x, y , spdX, spdY, width, height, color){
             self.y += self.spdY;
             if  (self.type === 'bullet'){
                 if (self.x < 0  || self.x > WIDTH || self.y < 0 || self.y > HEIGHT)
-                    delete self;}
+                    delete self;
+                 }
             else {
                 if (self.x < 0  || self.x > WIDTH)
                     self.spdX *= -1;
@@ -90,36 +90,13 @@ Entity = function(type, id, x, y , spdX, spdY, width, height, color){
                 y:entity2.y - entity2.height/2, 
                 width: entity2.width,
                 height:entity2.height,
+                }
+        return testCollisionRectangles(entity1,entity2);
         }
-    return testCollisionRectangles(entity1,entity2);
-    }
+
     return self;
 }
 
-/*
-getDistanceBetweenEntities = function (e1, e2){
-    var dx = e1.x - e2.x;
-    var dy = e1.x - e2.x;
-    return Math.sqrt(dx*dx + dy*dy);
-}
-
-
-testCollisionEntities = function (e1, e2){
-    var e1 = {
-        x:e1.x - 10,
-        y:e1.y - 10, 
-        width: e1.width,
-        height:e1.height,
-    }
-    var e2 = {
-        x:e2.x -15,
-        y:e2.y -15, 
-        width: e2.width,
-        height: e2.height,
-    }
-    return testCollisionRectangles(e1,e2);
-} 
-*/
 testCollisionRectangles = function (r1, r2){
     return r1.x <= r2.x + r2.width
         && r2.x <= r1.x + r1.width
@@ -149,7 +126,6 @@ Enemy = function(id, x , y, spdX, spdY, width, height){
     self.attackSpeed = 1;
     self.attackCounter = 1;
     self.aimAngle = 0;
-
     enemyList[id] = self;
 }
 
@@ -161,7 +137,6 @@ randomGenerateEnemy = function (){
     var id = Math.random();
     var spdX = 5 + Math.random() * 5;
     var spdY = 5 + Math.random() * 5;
-
     Enemy(id, x, y, spdX, spdY, width, height);
 }
 
@@ -170,7 +145,6 @@ Upgrade = function(id, x , y, spdX, spdY, width, height , color, category){
     var self = Entity('upgrade', id, x, y , spdX, spdY, width, height, color);
     self.category = category;
     upgradeList[id] = self;
-
 }
 
 randomGenerateUpgrade = function (){
@@ -191,7 +165,6 @@ randomGenerateUpgrade = function (){
         var category = 'attack';
         var color = 'blue';
     }
-
     Upgrade(id, x, y, spdX, spdY, width, height, color, category);
 }
 
@@ -199,7 +172,6 @@ Bullet = function(id, x , y, angle, spdX, spdY, width, height, color, timer){
     var self = Entity('bullet', id, x, y , spdX, spdY, width, height, 'black');
     self.angle = angle;
     self.timer = timer;
-    
     bulletList[id] = self;
 }
 
@@ -210,24 +182,20 @@ generateBullet = function (actor, overwriteAngle){
     var height = 10; 
     var id = Math.random();
     var angle = actor.aimAngle;
-    if (overwriteAngle != undefined){
+    if (overwriteAngle != undefined)
         angle = overwriteAngle;
-    }
     var spdX = Math.cos(angle/180*Math.PI)*5;
     var spdY = Math.sin(angle/180*Math.PI)*5;
     var color = 'black';
     var timer = 0;
-
    Bullet(id, x, y, angle, spdX, spdY, width, height, color, timer);
 }
 
 document.onmousemove = function(mouse){
     var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
     var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
-
     mouseX -= player.x;
     mouseY -= player.y;
-
     player.aimAngle = Math.atan2(mouseY, mouseX) / Math.PI * 180;
 }
 
@@ -261,7 +229,6 @@ performSpecialAttack = function(actor){
 }
 
 document.onkeydown = function(event){
-    //use awsd to move around
     if (event.keyCode == 68)
         player.pressRight = true;
     else if (event.keyCode == 83)
@@ -273,7 +240,6 @@ document.onkeydown = function(event){
 }
 
 document.onkeyup = function(event){
-    //use awsd to move around
     if (event.keyCode == 68)
         player.pressRight = false;
     else if (event.keyCode == 83)
@@ -290,14 +256,10 @@ update = function (){
     framecount++;
     score++;
 
-    if(framecount % 100 == 0){ // Every 4 seconds
+    if(framecount % 100 == 0) // Every 4 seconds
         randomGenerateEnemy();
-    }
-
-    if(framecount % 75 == 0){  // Every 3 seconds 
+    if(framecount % 75 == 0) // Every 3 seconds 
         randomGenerateUpgrade();
-    }
-    
     player.attackCounter += player.attackSpeed;
 
     for(var key in bulletList){
@@ -305,9 +267,9 @@ update = function (){
         
         var toRemove = false;
         bulletList[key].timer++;
-        if (bulletList[key].timer > 100){
+
+        if (bulletList[key].timer > 100)
             toRemove = true;
-        }
 
         for(var key2 in enemyList){
             var isColliding = bulletList[key].testCollision(enemyList[key2]);
@@ -318,9 +280,8 @@ update = function (){
                     break;
                }
            }
-        if (toRemove){
+        if (toRemove)
             delete bulletList[key];
-        }
       }
 
     for(var key in upgradeList){
@@ -328,12 +289,10 @@ update = function (){
 
         var isColliding = player.testCollision(upgradeList[key])
         if (isColliding){
-            if (upgradeList[key].category === 'score'){
+            if (upgradeList[key].category === 'score')
                 score += 1000;
-            }
-            if (upgradeList[key].category === 'attack'){
+            if (upgradeList[key].category === 'attack')
                 player.attackSpeed += 3;
-            }
 
             delete upgradeList[key]
         }
@@ -343,9 +302,8 @@ update = function (){
         enemyList[key].update();
 
         var isColliding = player.testCollision(enemyList[key])
-        if (isColliding){
+        if (isColliding)
             player.hp -= 1;
-        }
 
         if (player.hp <= 0){
                 var timeSurvived = Date.now() - timeWhenGameStarted;
@@ -359,10 +317,10 @@ update = function (){
 }
 
 startNewGame = function(){
-    player.hp = 10;
     timeWhenGameStarted = Date.now();
     framecount = 0;
     score = 0;
+    player.hp = 10;
     enemyList = {};
     upgradeList = {};
     bulletList = {};
