@@ -39,31 +39,13 @@ Entity = function(type, id, x, y , spdX, spdY, width, height, color){
     }
 
     self.updatePosition = function(){
-        if (self.type === 'player'){
-            if(self.pressRight && self.x < WIDTH - self.width/2)
-                self.x += 10;
-            if(self.pressLeft && self.x > 0 + self.width/2)
-                self.x -= 10;
-            if(self.pressUp && self.y > 0 + self.height/2)
-                self.y -= 10;
-            if(self.pressDown && self.y < HEIGHT - self.height/2)
-                self.y += 10;
-            }
-        else {
-            self.x += self.spdX;
-            self.y += self.spdY;
-            if  (self.type === 'bullet'){
-                if (self.x < 0  || self.x > WIDTH || self.y < 0 || self.y > HEIGHT)
-                    delete self;
-                 }
-            else {
-                if (self.x < 0  || self.x > WIDTH)
-                    self.spdX *= -1;
-                if (self.y < 0 || self.y > HEIGHT)
-                    self.spdY *= -1;
-                  }    
-            }
-        }
+        self.x += self.spdX;
+        self.y += self.spdY;
+        /*if (self.x < 0  || self.x > WIDTH)
+            self.spdX *= -1;
+        if (self.y < 0 || self.y > HEIGHT)
+            self.spdY *= -1;*/
+        }    
 
     self.draw = function(){
         ctx.save();
@@ -104,28 +86,75 @@ testCollisionRectangles = function (r1, r2){
         && r2.y <= r1.y + r1.height;
 }
 
-createPlayer = function(){ 
-    var self = Entity('player','MyID', 250, 250 , 30, 5, 20, 20, 'green');
+Actor = function(type, id, x , y, spdX, spdY, width, height, color, hp, attackSpeed){
+    var self = Entity(type, id, x , y, spdX, spdY, width, height, color);
 
-    self.hp = 10;
-    self.attackSpeed = 1;
+    self.hp = hp;
+    self.attackSpeed = attackSpeed;
     self.attackCounter = 1;
     self.aimAngle = 0;
+
+    var super_update = self.update;
+    self.update = function() {
+        //self.updatePosition();
+        //self.draw();
+        super_update();
+        self.attackCounter += self.attackSpeed;
+    }
+
+    var super_updatePosition = self.updatePosition;
+    self.updatePosition = function(){
+        super_updatePosition();
+        //self.x += self.spdX;
+        //self.y += self.spdY;
+        if (self.x < 0  || self.x > WIDTH)
+            self.spdX *= -1;
+        if (self.y < 0 || self.y > HEIGHT)
+            self.spdY *= -1;
+        }  
+
+    self.performAttack = function(){
+    if(self.attackCounter > 25){  // Every 1 second
+        self.attackCounter = 0;
+        generateBullet(self);
+        }
+    }
+
+    self.performSpecialAttack = function(){
+    if(self.attackCounter > 50){  // Every 2 second
+        self.attackCounter = 0;
+        generateBullet(self, self.aimAngle - 5);
+        generateBullet(self, self.aimAngle);
+        generateBullet(self, self.aimAngle + 5);        
+        }
+    }
+    return self;
+}
+
+Player = function(){ 
+    var self = Actor('player','MyID', 250, 250 , 30, 5, 20, 20, 'green', 10, 1);
 
     self.pressDown = false;
     self.pressUp = false;
     self.pressLeft = false;
     self.pressRight = false;
-    player = self;
+
+    self.updatePosition = function(){
+        if(self.pressRight && self.x < WIDTH - self.width/2)
+            self.x += 10;
+        if(self.pressLeft && self.x > 0 + self.width/2)
+            self.x -= 10;
+        if(self.pressUp && self.y > 0 + self.height/2)
+            self.y -= 10;
+        if(self.pressDown && self.y < HEIGHT - self.height/2)
+            self.y += 10;
+            }
+
+    return self;
 }
 
 Enemy = function(id, x , y, spdX, spdY, width, height){
-    var self = Entity('enemy', id, x, y , spdX, spdY, width, height, 'red');
-
-    self.hp = 10;
-    self.attackSpeed = 1;
-    self.attackCounter = 1;
-    self.aimAngle = 0;
+    var self = Actor('enemy', id, x, y , spdX, spdY, width, height, 'red', 10, 1);
     enemyList[id] = self;
 }
 
@@ -172,6 +201,24 @@ Bullet = function(id, x , y, angle, spdX, spdY, width, height, color, timer){
     var self = Entity('bullet', id, x, y , spdX, spdY, width, height, 'black');
     self.angle = angle;
     self.timer = timer;
+
+    var super_updatePosition = self.updatePosition;
+    self.updatePosition = function(){
+        super_updatePosition();
+        //self.x += self.spdX;
+        //self.y += self.spdY;
+        if(self.x < WIDTH - self.width/2 || self.x > 0 + self.width/2 || self.y > 0 + self.height/2 || HEIGHT - self.height/2)
+            delete self;
+            }
+           
+    /*  
+    self.updatePosition = function(){
+        self.x += self.spdX;
+        self.y += self.spdY;
+        if(self.x < WIDTH - self.width/2 || self.x > 0 + self.width/2 || self.y > 0 + self.height/2 || HEIGHT - self.height/2)
+            delete self;
+            }*/
+            
     bulletList[id] = self;
 }
 
@@ -200,32 +247,12 @@ document.onmousemove = function(mouse){
 }
 
 document.onclick = function(mouse){
-    performAttack(player);
+    player.performAttack();
 }
 
 document.oncontextmenu = function(mouse){  // on rightclick
-    performSpecialAttack(player);   
+    player.performSpecialAttack();   
     mouse.preventDefault();
-}
-
-performAttack = function(actor){
-    if(actor.attackCounter > 25){  // Every 1 second
-        actor.attackCounter = 0;
-        generateBullet(actor);
-    }
-}
-
-performSpecialAttack = function(actor){
-    if(actor.attackCounter > 50){  // Every 1 second
-        /*var angle = 0;
-        for(var angle=0; angle < 360; angle++){
-             generateBullet(player, angle); 
-        }*/
-        actor.attackCounter = 0;
-        generateBullet(actor, actor.aimAngle - 5);
-        generateBullet(actor, actor.aimAngle);
-        generateBullet(actor, actor.aimAngle + 5);        
-    }
 }
 
 document.onkeydown = function(event){
@@ -260,18 +287,18 @@ update = function (){
         randomGenerateEnemy();
     if(framecount % 75 == 0) // Every 3 seconds 
         randomGenerateUpgrade();
-    player.attackCounter += player.attackSpeed;
+    //player.attackCounter += player.attackSpeed;
 
     for(var key in bulletList){
         bulletList[key].update();
         
         var toRemove = false;
         bulletList[key].timer++;
-
         if (bulletList[key].timer > 100)
             toRemove = true;
-
+        
         for(var key2 in enemyList){
+            /*
             var isColliding = bulletList[key].testCollision(enemyList[key2]);
                 if (isColliding){
                     toRemove = true;
@@ -279,6 +306,7 @@ update = function (){
                     //after deleting bullet stop the loop
                     break;
                }
+               //*/
            }
         if (toRemove)
             delete bulletList[key];
@@ -300,17 +328,20 @@ update = function (){
 
     for(var key in enemyList){
         enemyList[key].update();
+        //enemyList[key].attackCounter += enemyList[key].attackSpeed;
+        enemyList[key].performAttack();
+
 
         var isColliding = player.testCollision(enemyList[key])
         if (isColliding)
             player.hp -= 1;
+        }
 
-        if (player.hp <= 0){
-                var timeSurvived = Date.now() - timeWhenGameStarted;
-                console.log("You lost! You survived for " + timeSurvived + "ms");
-                startNewGame();
+    if (player.hp <= 0){
+        var timeSurvived = Date.now() - timeWhenGameStarted;
+        console.log("You lost! You survived for " + timeSurvived + "ms");
+            startNewGame();
             }
-	}
 	player.update();
     ctx.fillText("HP: " + player.hp, 0, 30);
     ctx.fillText("score: " + score , 200, 30);
@@ -329,7 +360,7 @@ startNewGame = function(){
     randomGenerateEnemy();
 }
 
-createPlayer();
+player = Player();
 startNewGame();
 setInterval(update, 40);
 
