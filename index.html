@@ -78,9 +78,56 @@ document.onkeyup = function(event){
         player.pressUp = false;
 }
 
+update = function (){
+    ctx.clearRect(0,0,WIDTH,HEIGHT);
+    drawMap();
+    framecount++;
+    score++;
+
+    if(framecount % 100 == 0) // Every 4 seconds
+        randomGenerateEnemy();
+    if(framecount % 75 == 0) // Every 3 seconds 
+        randomGenerateUpgrade();
+
+    for(var key in bulletList){
+        bulletList[key].update();
+    }
+
+    for(var key in upgradeList){
+        upgradeList[key].update();
+        }
+
+    for(var key in enemyList){
+        enemyList[key].update();
+        }
+
+    player.update();
+    ctx.fillText("HP: " + player.hp, 0, 30);
+    ctx.fillText("score: " + score , 200, 30);
+}
+
+startNewGame = function(){
+    timeWhenGameStarted = Date.now();
+    framecount = 0;
+    score = 0;
+    player.hp = 10;
+    enemyList = {};
+    upgradeList = {};
+    bulletList = {};
+    randomGenerateEnemy();
+    randomGenerateEnemy();
+    randomGenerateEnemy();
+}
+
 player = Player();
 startNewGame();
 setInterval(update, 40);
+
+drawMap = function(){
+    var x = WIDTH/2 - player.x;
+    var y = HEIGHT/2 - player.y;
+    ctx.drawImage(Img.map, 0, 0, Img.map.width, Img.map.height, x, y, Img.map.width * 2, Img.map.height * 2);
+}
 
 </script>
 </body>
