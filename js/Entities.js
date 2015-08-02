@@ -24,9 +24,9 @@ Entity = function(type, id, x, y , spdX, spdY, width, height, img){
     self.updatePosition = function(){
         self.x += self.spdX;
         self.y += self.spdY;
-        if (self.x < 0  || self.x > WIDTH)
+        if (self.x < 0  || self.x > currentMap.width)
             self.spdX *= -1;
-        if (self.y < 0 || self.y > HEIGHT)
+        if (self.y < 0 || self.y > currentMap.heights)
             self.spdY *= -1;
         }    
 
@@ -112,14 +112,23 @@ Player = function(){
     self.pressRight = false;
 
     self.updatePosition = function(){
-        if(self.pressRight && self.x < WIDTH - self.width/2)
+        if(self.pressRight)
             self.x += 10;
-        if(self.pressLeft && self.x > 0 + self.width/2)
+        if(self.pressLeft)
             self.x -= 10;
-        if(self.pressUp && self.y > 0 + self.height/2)
+        if(self.pressUp)
             self.y -= 10;
-        if(self.pressDown && self.y < HEIGHT - self.height/2)
+        if(self.pressDown)
             self.y += 10;
+
+        if(self.x < self.width/2)
+            self.x = self.width/2;
+        if(self.x > currentMap.width - self.width/2)
+            self.x = currentMap.width - self.width/2;
+        if(self.y < self.height/2)
+            self.y = self.height/2;
+        if (self.y > currentMap.height - self.height/2)
+            self.y = currentMap.height - self.height/2;
             }
 
     var super_update = self.update;
@@ -141,9 +150,9 @@ Enemy = function(id, x , y, spdX, spdY, width, height){
     self.update = function(){
         super_update();
         self.performAttack();
-        var isColliding = player.testCollision(self)
-        if (isColliding)
-            player.hp -= 1;
+        //var isColliding = player.testCollision(self)
+        //if (isColliding)
+       //     player.hp -= 1;
     }
 
     enemyList[id] = self;
@@ -169,10 +178,10 @@ Upgrade = function(id, x , y, spdX, spdY, width, height , img, category){
     upgradeList[id] = self;
 }
 
-Bullet = function(id, x , y, angle, spdX, spdY, width, height, img, timer){
-    var self = Entity('bullet', id, x, y , spdX, spdY, width, height, img);
-    self.angle = angle;
-    self.timer = timer;
+Bullet = function(id, x , y, spdX, spdY, width, height, combatType){
+    var self = Entity('bullet', id, x, y , spdX, spdY, width, height, Img.bullet);
+    self.timer = 0;
+    self.combatType = combatType;
 
     var super_update = self.update;
     self.update = function(){
@@ -182,17 +191,23 @@ Bullet = function(id, x , y, angle, spdX, spdY, width, height, img, timer){
         if (self.timer > 100){
             toRemove = true;
             }
-        for(var key2 in enemyList){
-            /*
-            var isColliding = bulletList[key].testCollision(enemyList[key2]);
-                if (isColliding){
+
+        if (combatType === 'player'){    
+            for(var key in enemyList){
+                if (self.testCollision(enemyList[key])){;
+                    //if (isColliding){
                     toRemove = true;
-                    delete enemyList[key2];
-                    //after deleting bullet stop the loop
-                    break;
+                    delete enemyList[key];
+                   }
                }
-              */ 
-           } 
+            }
+        else if (combatType === 'enemy'){
+            if (self.testCollision(player)){;
+                toRemove = true;
+                player.hp -= 10;
+               }
+        }   
+
         if (toRemove)
             delete bulletList[self.id];
         }
@@ -200,8 +215,8 @@ Bullet = function(id, x , y, angle, spdX, spdY, width, height, img, timer){
 }
 
 randomGenerateEnemy = function (){
-    var x = Math.random() * WIDTH;
-    var y = Math.random() * HEIGHT;
+    var x = Math.random() * currentMap.width;
+    var y = Math.random() * currentMap.height;
     var width = 64; //10 + Math.random() * 30;
     var height = 64; //10 + Math.random() * 30;
     var id = Math.random();
@@ -211,8 +226,8 @@ randomGenerateEnemy = function (){
 }
 
 randomGenerateUpgrade = function (){
-    var x = Math.random() * WIDTH;
-    var y = Math.random() * HEIGHT;
+    var x = Math.random() * currentMap.width;
+    var y = Math.random() * currentMap.height;
     var width = 32;
     var height = 32; 
     var id = Math.random();
@@ -244,5 +259,5 @@ generateBullet = function (actor, overwriteAngle){
     var spdY = Math.sin(angle/180*Math.PI)*5;
     var img = Img.bullet;
     var timer = 0;
-   Bullet(id, x, y, angle, spdX, spdY, width, height, img, timer);
+   Bullet(id, x, y, spdX, spdY, width, height, actor.type);
 }

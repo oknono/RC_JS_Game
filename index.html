@@ -42,8 +42,8 @@ testCollisionRectangles = function (r1, r2){
 document.onmousemove = function(mouse){
     var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
     var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
-    mouseX -= player.x;
-    mouseY -= player.y;
+    mouseX -= WIDTH/2;
+    mouseY -= HEIGHT/2;
     player.aimAngle = Math.atan2(mouseY, mouseX) / Math.PI * 180;
 }
 
@@ -128,7 +128,7 @@ startNewGame = function(){
     timeWhenGameStarted = Date.now();
     framecount = 0;
     score = 0;
-    player.hp = 10;
+    player.hp = 50;
     enemyList = {};
     upgradeList = {};
     bulletList = {};
