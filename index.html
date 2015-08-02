@@ -84,6 +84,9 @@ document.onkeyup = function(event){
 
 update = function (){
     if (paused){
+        ctx.fillStyle = 'red';
+        ctx.fillText('Game Paused', WIDTH/2 - 100, HEIGHT/2 + 100);
+        ctx.fillStyle = 'black';
         return;
     }
     ctx.clearRect(0,0,WIDTH,HEIGHT);
