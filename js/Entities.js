@@ -19,15 +19,7 @@ Entity = function(type, id, x, y, width, height, img){
         self.draw();
     }
 
-    self.updatePosition = function(){
-        /*
-        self.x += self.spdX;
-        self.y += self.spdY;
-        if (self.x < 0  || self.x > currentMap.width)
-            self.spdX *= -1;
-        if (self.y < 0 || self.y > currentMap.heights)
-            self.spdY *= -1;
-        */    
+    self.updatePosition = function(){  
         }    
 
     self.draw = function(){
@@ -83,6 +75,9 @@ Actor = function(type, id, x , y, width, height, img, hp, attackSpeed){
     self.update = function() {
         super_update();
         self.attackCounter += self.attackSpeed;
+        if (self.hp <= 0){
+            self.onDeath();
+        }
     }
 
     self.performAttack = function(){
@@ -99,6 +94,19 @@ Actor = function(type, id, x , y, width, height, img, hp, attackSpeed){
         generateBullet(self, self.aimAngle);
         generateBullet(self, self.aimAngle + 5);        
         }
+    }
+
+    self.onDeath = function(){
+        /*if (self.type === 'player'){
+            var timeSurvived = Date.now() - timeWhenGameStarted;
+            console.log("You lost! You survived for " + timeSurvived + "ms");
+            startNewGame();
+        }
+
+        else if (self.type === 'enemy'){
+            console.log("You killed an enemy!");
+            delete enemyList[self.id];    
+        }*/
     }
     return self;
 }
@@ -131,29 +139,25 @@ Player = function(){
             self.y = currentMap.height - self.height/2;
             }
 
-    var super_update = self.update;
-    self.update = function(){
-        super_update();
-        if (self.hp <= 0){
-            var timeSurvived = Date.now() - timeWhenGameStarted;
-            console.log("You lost! You survived for " + timeSurvived + "ms");
-            startNewGame();
-            }
-        }
+    self.onDeath = function(){
+        var timeSurvived = Date.now() - timeWhenGameStarted;
+        console.log("You lost! You survived for " + timeSurvived + "ms");
+        startNewGame();  
+    }
+ 
     return self;
 }
 
-Enemy = function(id, x , y, width, height){
-    var self = Actor('enemy', id, x, y, width, height, Img.enemy, 10, 1);
+Enemy = function(id, x , y, width, height, img, hp, attackSpeed){
+    var self = Actor('enemy', id, x, y, width, height, img, hp, attackSpeed);
+    
 
     var super_update = self.update;
     self.update = function(){
+        var toRemove = false;
         super_update();
         self.performAttack();
         self.updateAim();
-        //var isColliding = player.testCollision(self)
-        //if (isColliding)
-       //     player.hp -= 1;
     }
 
     self.updatePosition = function(){
@@ -178,6 +182,9 @@ Enemy = function(id, x , y, width, height){
         self.aimAngle = Math.atan2(diffY, diffX) / Math.PI * 180;
     }
 
+    self.onDeath = function(){
+        delete enemyList[self.id];    
+    }
 
     enemyList[id] = self;
 }
@@ -224,15 +231,22 @@ Bullet = function(id, x , y, spdX, spdY,  width, height, combatType){
                 if (self.testCollision(enemyList[key])){;
                     //if (isColliding){
                     toRemove = true;
-                    delete enemyList[key];
+                    enemyList[key].hp -= 1;
+                    //if (enemyList[key].hp <= 0){
+                    //    //delete enemyList[key];
+                    //    enemyList[key].onDeath();
+                   // }
                    }
                }
             }
         else if (combatType === 'enemy'){
-            if (self.testCollision(player)){;
+            if (self.testCollision(player)){
                 toRemove = true;
-                player.hp -= 10;
-               }
+                player.hp -= 1;
+                //if (player.hp <= 0){
+                //        player.onDeath();
+               // }
+            }
         }   
 
         if (toRemove)
@@ -257,7 +271,10 @@ randomGenerateEnemy = function (){
     var id = Math.random();
     //var spdX = 5 + Math.random() * 5;
     //var spdY = 5 + Math.random() * 5;
-    Enemy(id, x, y, width, height);
+    if(Math.random() < 0.5)
+        Enemy(id, x, y, width, height, Img.bat, 2, 1);
+    else
+        Enemy(id, x, y, width, height, Img.bee, 1, 1);
 }
 
 randomGenerateUpgrade = function (){
