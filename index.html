@@ -16,6 +16,7 @@ var WIDTH = 500;
 var timeWhenGameStarted = Date.now();
 var framecount = 0;
 var score = 0;
+var paused = false; 
 
 var Img = {};
 Img.player = new Image();
@@ -65,6 +66,9 @@ document.onkeydown = function(event){
         player.pressLeft = true;
     else if (event.keyCode == 87)
         player.pressUp = true;
+
+    else if (event.keyCode == 80)
+        paused = !paused;
 }
 
 document.onkeyup = function(event){
@@ -79,6 +83,9 @@ document.onkeyup = function(event){
 }
 
 update = function (){
+    if (paused){
+        return;
+    }
     ctx.clearRect(0,0,WIDTH,HEIGHT);
     currentMap.draw();
     framecount++;
