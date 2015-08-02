@@ -50,12 +50,27 @@ document.onmousemove = function(mouse){
     player.aimAngle = Math.atan2(mouseY, mouseX) / Math.PI * 180;
 }
 
+document.onmousedown = function(mouse){
+    if(mouse.which === 1)
+        player.pressMouseLeft = true;
+    if(mouse.which === 3)
+        player.pressMouseRight = true;
+}
+
+document.onmouseup = function(mouse){
+    if(mouse.which === 1)
+        player.pressMouseLeft = false;
+    if(mouse.which === 3)
+        player.pressMouseRight = false;
+}
+/*
 document.onclick = function(mouse){
     player.performAttack();
 }
+*/
 
 document.oncontextmenu = function(mouse){  // on rightclick
-    player.performSpecialAttack();   
+    //player.performSpecialAttack();   
     mouse.preventDefault();
 }
 

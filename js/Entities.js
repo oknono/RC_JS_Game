@@ -25,7 +25,7 @@ Entity = function(type, id, x, y, width, height, img){
     self.draw = function(){
         ctx.save();
 
-        var x = self.x - player.x;
+       var x = self.x - player.x;
         var y = self.y - player.y;
 
         x += WIDTH/2;
@@ -67,6 +67,7 @@ Actor = function(type, id, x , y, width, height, img, hp, attackSpeed){
     var self = Entity(type, id, x , y, width, height, img);
 
     self.hp = hp;
+    self.hpMax = hp;
     self.attackSpeed = attackSpeed;
     self.attackCounter = 1;
     self.aimAngle = 0;
@@ -119,6 +120,18 @@ Player = function(){
     self.pressLeft = false;
     self.pressRight = false;
 
+    self.pressMouseLeft = false;
+    self.pressMouseRight = false;
+
+    var super_update = self.update;
+    self.update = function(){
+        super_update();
+        if (self.pressMouseLeft)
+            self.performAttack();
+        if (self.pressMouseRight)
+            self.performSpecialAttack();
+    }
+
     self.updatePosition = function(){
         if(self.pressRight)
             self.x += 10;
@@ -158,6 +171,23 @@ Enemy = function(id, x , y, width, height, img, hp, attackSpeed){
         super_update();
         self.performAttack();
         self.updateAim();
+    }
+
+    var super_draw = self.draw;
+    self.draw = function(){
+        super_draw();
+        var x = self.x - player.x + WIDTH/2;
+        var y = self.y - player.y + HEIGHT/2 - self.height/2 - 20;
+        ctx.save();
+        ctx.fillStyle = 'red';
+        var bar = 100 * self.hp / self.hpMax;
+        if (bar < 0) 
+            bar = 0;
+        ctx.fillRect(x - 50, y, bar, 10);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x - 50, y, 100, 10);
+        ctx.restore();
+
     }
 
     self.updatePosition = function(){
@@ -272,9 +302,9 @@ randomGenerateEnemy = function (){
     //var spdX = 5 + Math.random() * 5;
     //var spdY = 5 + Math.random() * 5;
     if(Math.random() < 0.5)
-        Enemy(id, x, y, width, height, Img.bat, 2, 1);
+        Enemy(id, x, y, width, height, Img.bat, 5, 1);
     else
-        Enemy(id, x, y, width, height, Img.bee, 1, 1);
+        Enemy(id, x, y, width, height, Img.bee, 2, 3);
 }
 
 randomGenerateUpgrade = function (){
