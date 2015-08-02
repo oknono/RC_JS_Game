@@ -28,8 +28,8 @@ Img.upgrade1 = new Image();
 Img.upgrade1.src = 'images/upgrade1.png';
 Img.upgrade2 = new Image();
 Img.upgrade2.src = 'images/upgrade2.png';
-Img.map = new Image();
-Img.map.src = 'images/map.png';
+//Img.map = new Image();
+//Img.map.src = 'images/map.png';
 
 
 testCollisionRectangles = function (r1, r2){
@@ -80,7 +80,7 @@ document.onkeyup = function(event){
 
 update = function (){
     ctx.clearRect(0,0,WIDTH,HEIGHT);
-    drawMap();
+    currentMap.draw();
     framecount++;
     score++;
 
@@ -106,6 +106,24 @@ update = function (){
     ctx.fillText("score: " + score , 200, 30);
 }
 
+Maps = function(id, imgSrc, width, height){
+    var self = {
+        id:id,
+        image: new Image(),
+        width:width,
+        height:height,
+    }
+
+    self.image.src = imgSrc;
+
+    self.draw = function(){
+        var x = WIDTH/2 - player.x;
+        var y = HEIGHT/2 - player.y;
+        ctx.drawImage(self.image, 0, 0, self.image.width, self.image.height, x, y, self.image.width * 2, self.image .height * 2);
+    }
+    return self;
+}
+
 startNewGame = function(){
     timeWhenGameStarted = Date.now();
     framecount = 0;
@@ -119,15 +137,11 @@ startNewGame = function(){
     randomGenerateEnemy();
 }
 
+currentMap = Maps('field','images/map.png', 1280, 960);
 player = Player();
 startNewGame();
 setInterval(update, 40);
 
-drawMap = function(){
-    var x = WIDTH/2 - player.x;
-    var y = HEIGHT/2 - player.y;
-    ctx.drawImage(Img.map, 0, 0, Img.map.width, Img.map.height, x, y, Img.map.width * 2, Img.map.height * 2);
-}
 
 </script>
 </body>
