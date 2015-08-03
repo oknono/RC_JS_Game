@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>HTML 5 Game</title>
+</head>
+<body>
+<canvas id ="ctx" width="500" height="500" style="border:1px solid #000000"> </canvas>
+<script type="text/javascript" src="js/Entities.js"></script>
+<script type="text/javascript">
+
+var ctx = document.getElementById("ctx").getContext("2d");
+ctx.font = '30px Arial';
+
+var HEIGHT = 500;
+var WIDTH = 500;
+var timeWhenGameStarted = Date.now();
+var framecount = 0;
+var score = 0;
+var paused = false; 
+
+var Img = {};
+Img.player = new Image();
+Img.player.src = 'images/player.png';
+Img.bat = new Image();
+Img.bat.src = 'images/bat.png';
+Img.bee = new Image();
+Img.bee.src = 'images/bee.png';
+Img.bullet = new Image();
+Img.bullet.src = 'images/bullet.png';
+Img.upgrade1 = new Image();
+Img.upgrade1.src = 'images/upgrade1.png';
+Img.upgrade2 = new Image();
+Img.upgrade2.src = 'images/upgrade2.png';
+//Img.map = new Image();
+//Img.map.src = 'images/map.png';
+
+
+testCollisionRectangles = function (r1, r2){
+    return r1.x <= r2.x + r2.width
+        && r2.x <= r1.x + r1.width
+        && r1.y <= r2.y + r2.height
+        && r2.y <= r1.y + r1.height;
+}
+
+document.onmousemove = function(mouse){
+    var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+    var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+    mouseX -= WIDTH/2;
+    mouseY -= HEIGHT/2;
+    player.aimAngle = Math.atan2(mouseY, mouseX) / Math.PI * 180;
+}
+
+document.onmousedown = function(mouse){
+    if(mouse.which === 1)
+        player.pressMouseLeft = true;
+    if(mouse.which === 3)
+        player.pressMouseRight = true;
+}
+
+document.onmouseup = function(mouse){
+    if(mouse.which === 1)
+        player.pressMouseLeft = false;
+    if(mouse.which === 3)
+        player.pressMouseRight = false;
+}
+/*
+document.onclick = function(mouse){
+    player.performAttack();
+}
+*/
+
+document.oncontextmenu = function(mouse){  // on rightclick
+    //player.performSpecialAttack();   
+    mouse.preventDefault();
+}
+
+document.onkeydown = function(event){
+    if (event.keyCode == 68)
+        player.pressRight = true;
+    else if (event.keyCode == 83)
+        player.pressDown = true;
+    else if (event.keyCode == 65)
+        player.pressLeft = true;
+    else if (event.keyCode == 87)
+        player.pressUp = true;
+
+    else if (event.keyCode == 80)
+        paused = !paused;
+}
+
+document.onkeyup = function(event){
+    if (event.keyCode == 68)
+        player.pressRight = false;
+    else if (event.keyCode == 83)
+        player.pressDown = false;
+    else if (event.keyCode == 65)
+        player.pressLeft = false;
+    else if (event.keyCode == 87)
+        player.pressUp = false;
+}
+
+update = function (){
+    if (paused){
+        ctx.fillStyle = 'red';
+        ctx.fillText('Game Paused', WIDTH/2 - 100, HEIGHT/2 + 100);
+        ctx.fillStyle = 'black';
+        return;
+    }
+    ctx.clearRect(0,0,WIDTH,HEIGHT);
+    currentMap.draw();
+    framecount++;
+    score++;
+
+    if(framecount % 100 == 0) // Every 4 seconds
+        randomGenerateEnemy();
+    if(framecount % 75 == 0) // Every 3 seconds 
+        randomGenerateUpgrade();
+
+    for(var key in bulletList){
+        bulletList[key].update();
+    }
+
+    for(var key in upgradeList){
+        upgradeList[key].update();
+        }
+
+    for(var key in enemyList){
+        enemyList[key].update();
+        }
+
+    player.update();
+    ctx.fillText("HP: " + player.hp, 0, 30);
+    ctx.fillText("score: " + score , 200, 30);
+}
+
+Maps = function(id, imgSrc, width, height){
+    var self = {
+        id:id,
+        image: new Image(),
+        width:width,
+        height:height,
+    }
+
+    self.image.src = imgSrc;
+
+    self.draw = function(){
+        var x = WIDTH/2 - player.x;
+        var y = HEIGHT/2 - player.y;
+        ctx.drawImage(self.image, 0, 0, self.image.width, self.image.height, x, y, self.image.width * 2, self.image .height * 2);
+    }
+    return self;
+}
+
+startNewGame = function(){
+    timeWhenGameStarted = Date.now();
+    framecount = 0;
+    score = 0;
+    player.hp = 10;
+    enemyList = {};
+    upgradeList = {};
+    bulletList = {};
+    randomGenerateEnemy();
+    randomGenerateEnemy();
+    randomGenerateEnemy();
+}
+
+currentMap = Maps('field','images/map.png', 1280, 960);
+player = Player();
+startNewGame();
+setInterval(update, 40);
+
+
+</script>
+</body>
+</html>
